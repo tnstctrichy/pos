@@ -14,10 +14,6 @@ st.set_page_config(
 # Get yesterday's date
 yesterday_date = (datetime.now() - timedelta(days=1)).strftime("%d-%m-%Y")
 
-# Session state for uploaded data
-if "uploaded_data" not in st.session_state:
-    st.session_state.uploaded_data = None
-
 # Enhanced title with styling and border
 st.markdown(f"""
     <div style="border: 4px solid #4CAF50; padding: 15px; border-radius: 15px; background-color: #E3F2FD; text-align: center;">
@@ -33,6 +29,12 @@ st.markdown(f"""
 # Sidebar for navigation
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Choose an option", ["View Dashboard", "Upload Data"])
+
+# Initialize session state for uploaded data
+if "uploaded_data" not in st.session_state:
+    st.session_state.uploaded_data = None
+if "file_name" not in st.session_state:
+    st.session_state.file_name = None
 
 # Password-protected upload section
 if page == "Upload Data":
@@ -58,7 +60,8 @@ if page == "Upload Data":
             # Validate columns
             if all(col in data.columns for col in required_columns):
                 st.session_state.uploaded_data = data
-                st.success("File uploaded successfully! Switch to 'View Dashboard' to see the data.")
+                st.session_state.file_name = uploaded_file.name
+                st.success(f"File '{uploaded_file.name}' uploaded successfully! Switch to 'View Dashboard' to see the data.")
             else:
                 st.error(f"The file must contain the required columns: {', '.join(required_columns)}")
         except Exception as e:
@@ -69,6 +72,8 @@ if page == "View Dashboard":
     if st.session_state.uploaded_data is None:
         st.warning("No data uploaded yet. Please upload an Excel file in the 'Upload Data' section.")
     else:
+        st.markdown(f"### Currently Displaying Data from: `{st.session_state.file_name}`")
+
         # Prepare data
         data = st.session_state.uploaded_data.copy()
         data = data.drop(columns=["SNO"], errors="ignore")  # Remove record ID column
